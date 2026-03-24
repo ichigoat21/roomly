@@ -16,8 +16,9 @@ enum Role {
 
 model Users {
   id           String     @default(uuid())   @unique
+  googleId     String?    @unique
   username     String     @unique
-  password     String
+  password     String?
   email        String     @unique
   avatar       String?
   membership   RoomMembers[]
