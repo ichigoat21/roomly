@@ -1,13 +1,11 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken"
 import { config } from "dotenv";
 
 config()
-interface customReq extends Request{
-    userId :string
-}
 
-export const authMiddleware = (req : customReq, res : Response)=>{
+
+export const authMiddleware = (req : Request, res : Response, next : NextFunction)=>{
     const authHeader = req.headers.authorization
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -18,6 +16,7 @@ export const authMiddleware = (req : customReq, res : Response)=>{
     try {
         const decoded = jwt.verify(token, process.env.SECRET!) as {userId : string}
         req.userId = decoded.userId
+        next()
     } catch(err) {
         res.status(500).json({message: "Something went wrong"})
         console.log(err)
