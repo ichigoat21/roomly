@@ -82,13 +82,17 @@ wss.on("connection", (ws, request) => {
                     }))
                 }
             })
-            await client.chats.create({
+            try {
+                await client.chats.create({
                 data: {
                     message: parsedData.message,
-                    roomId: parsedData.roomId,
+                    roomId: Number(parsedData.roomId),
                     userId
                 }
-            })
+            })} catch (err){
+                console.log(err)
+            }
+            
         }
     })
 
