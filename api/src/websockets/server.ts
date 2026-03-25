@@ -71,7 +71,10 @@ wss.on("connection", (ws, request) => {
 
         if (parsedData.type === "chat") {
             users.forEach(u => {
-                if (u.rooms.includes(parsedData.roomId)) {
+                if (
+                    u.rooms.includes(parsedData.roomId) &&
+                    u.ws !== ws   // exclude sender
+                ) {
                     u.ws.send(JSON.stringify({
                         type: "chat",
                         message: parsedData.message,
@@ -79,7 +82,6 @@ wss.on("connection", (ws, request) => {
                     }))
                 }
             })
-
             await client.chats.create({
                 data: {
                     message: parsedData.message,
