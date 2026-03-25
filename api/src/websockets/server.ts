@@ -3,6 +3,8 @@ import WebSocket from "ws"
 import jwt, { JwtPayload } from "jsonwebtoken"
 import { config } from "dotenv"
 import { client } from "../lib/lib"
+import z from "zod"
+import messageValidation from "../validation/message.Types"
 
 config()
 
@@ -52,14 +54,21 @@ wss.on("connection", (ws, request) => {
     users.push(user)
 
     ws.on("message", async (data) => {
-        let parsedData;
+        let parsedData
+        try {
+            parsedData = JSON.parse(data.toString())
+        } catch {
+            console.log("Invalid JSON:", data.toString())
+            return
+        }
 
-         try {
-         parsedData = JSON.parse(data.toString())
-         } catch (err) {
-        console.log("Invalid JSON:", data.toString())
-        return
-         }
+        const result = messageValidation.safeParse(parsedData)
+        if(!result.success){
+            console.log("Invalid message:", result.error)
+            return
+        }
+        parsedData = result.data
+
 
         if (parsedData.type === "join") {
             user.rooms.push(parsedData.roomId)

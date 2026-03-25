@@ -1,12 +1,19 @@
 import { Request, Response } from "express";
 import { handleRoomCreate, handleRoomJoin } from "../services/room.Service";
+import { roomValidation } from "../validation/room.Types";
 
 
 
 export const createRoomHandler = async (req : Request, res : Response)=> {
+   const parsedData = roomValidation.safeParse(req.body)
+   if(!parsedData.success){
+        res.status(403).json({message : "Please provide right name"})
+        return
+   }
    try {
+    const slug = parsedData.data.slug
     const userId = req.userId!
-    const slug = req.body.slug
+    
     const room = await handleRoomCreate(userId, slug)
     res.status(201).json({room})
    } catch {
