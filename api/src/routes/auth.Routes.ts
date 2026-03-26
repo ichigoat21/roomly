@@ -1,6 +1,6 @@
 import { Router } from "express"
 import passport from "passport"
-import { googleCallback } from "../controllers/authController"
+import { googleCallback, Signin, Signup } from "../controllers/authController"
 
 const authRouter = Router()
 
@@ -18,5 +18,8 @@ authRouter.get("/google/callback",
     }),
     googleCallback
 )
+
+authRouter.post("/signup", Signup)
+authRouter.post("/signin", Signin)
 
 export default authRouter
