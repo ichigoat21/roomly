@@ -1,6 +1,7 @@
 import { client } from "../lib/lib";
 import jwt from "jsonwebtoken"
 import { config } from "dotenv";
+import bcrypt from "bcrypt"
 
 config()
 
@@ -26,3 +27,39 @@ export async function handleGoogleAuth(profile : any){
       );
     return {user, token}
 }
+
+export async function handleSignup(username : string, password : string, email : string){
+    const hashedPass = await bcrypt.hash(password, 10)
+    const user = await client.users.create({
+        data : {
+            username, 
+            password : hashedPass, 
+            email
+        }
+    })
+    return user.id
+}
+
+export async function handleSignin(email: string, password: string) {
+    const user = await client.users.findUnique({
+        where: { email }
+    });
+
+    if (!user) {
+        return { success: false, message: "Wrong Email" };
+    }
+
+    const pass = await bcrypt.compare(password, user.password!);
+
+    if (!pass) {
+        return { success: false, message: "Wrong Password" };
+    }
+
+    const token = jwt.sign(
+        { userId: user.id },
+        process.env.SECRET!
+    );
+
+    return { success: true, token };
+}
+
