@@ -6,8 +6,8 @@ export const googleCallback = async (req : Request, res : Response)=> {
     try {
         const profile = req.user 
         console.log(profile)
-        const token =  await handleGoogleAuth(profile)
-        res.json({token})
+        const {token} =  await handleGoogleAuth(profile)
+        res.redirect(`http://localhost:3001/dashboard?token=${token}`)
     } catch(err) {
         res.status(500).json({message : "Sorry Auth Failed"})
         console.log(err)
@@ -23,8 +23,8 @@ export const Signup = async (req : Request, res : Response)=>{
         const username = parsedData.data?.username
         const password = parsedData.data?.password
         const email = parsedData.data?.email
-        const userId = handleSignup(username, password, email);
-        res.status(401).json({message : "Signup Complete", userId})
+        const token= await handleSignup(username, password, email);
+        res.status(201).json({message : "Signup Complete", token})
     } catch(err) {
         res.status(500).json({message : "Sorry Auth Failed"})
         console.log(err)

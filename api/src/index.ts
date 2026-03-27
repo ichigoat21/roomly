@@ -3,11 +3,13 @@ import authRouter from "./routes/auth.Routes"
 import "./config/passport"
 import { authMiddleware } from "./middlewares/auth.Middleware"
 import roomRouter from "./routes/room.Routes"
+import cors from "cors"
 
 
 const app = express()
 
 app.use(express.json())
+app.use(cors())
 app.use('/auth', authRouter)
 app.use("/room", authMiddleware, roomRouter)
 

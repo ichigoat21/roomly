@@ -16,7 +16,7 @@ export async function handleGoogleAuth(profile : any){
             data : {
                 username : profile.displayName,
                 email: profile.emails?.[0]?.value,
-                googleId : profile.id
+                googleId : profile.id 
             }
         })
     }
@@ -29,15 +29,23 @@ export async function handleGoogleAuth(profile : any){
 }
 
 export async function handleSignup(username : string, password : string, email : string){
-    const hashedPass = await bcrypt.hash(password, 10)
-    const user = await client.users.create({
-        data : {
-            username, 
-            password : hashedPass, 
-            email
-        }
-    })
-    return user.id
+    try {
+        const hashedPass = await bcrypt.hash(password, 10)
+        const user = await client.users.create({
+            data : {
+                username, 
+                password : hashedPass, 
+                email
+            }
+        })
+        const token = jwt.sign({
+            userId : user.id
+        }, process.env.SECRET!)
+        return {token}
+    } catch(err){
+        return {success : false, message : err}
+    }
+   
 }
 
 export async function handleSignin(email: string, password: string) {

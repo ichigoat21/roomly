@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ interface AuthPageProps {
   onGoogleSignIn?: () => void;
   onLogin?: (email: string, password: string) => void;
   onSignup?: (name: string, email: string, password: string) => void;
+  isSignedUp? : boolean;
   isLoading?: boolean;
   errorMessage?: string;
 }
@@ -32,6 +33,8 @@ export default function AuthComponent({
     if (mode === "login") onLogin(email, password);
     else onSignup(name, email, password);
   };
+
+
 
   return (
     <div
