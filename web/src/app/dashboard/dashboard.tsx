@@ -36,20 +36,9 @@ interface DashboardPageProps {
   onSignOut?: () => void;
 }
 
-const DUMMY_USER: User = {
-  name: "Ada Lovelace",
-  email: "ada@example.com",
-};
-
-const DUMMY_ROOMS: Room[] = [
-  { id: "1", name: "design-team", memberCount: 5, lastMessage: "Let's sync tomorrow", lastMessageAt: "2:30 PM", isActive: true },
-  { id: "2", name: "backend-crew", memberCount: 3, lastMessage: "PR is ready for review", lastMessageAt: "11:14 AM", isActive: false },
-  { id: "3", name: "general", memberCount: 12, lastMessage: "Good morning everyone!", lastMessageAt: "9:01 AM", isActive: true },
-];
-
 export default function DashboardPage({
-  currentUser = DUMMY_USER,
-  rooms = DUMMY_ROOMS,
+  currentUser,
+  rooms = [],
   onCreateRoom = () => {},
   onJoinRoom = () => {},
   onEnterRoom = () => {},
@@ -59,6 +48,8 @@ export default function DashboardPage({
   const [showJoin, setShowJoin] = useState(false);
   const [roomName, setRoomName] = useState("");
   const [roomCode, setRoomCode] = useState("");
+
+  if (!currentUser) return null;
 
   const initials = currentUser.name
     .split(" ")
@@ -83,7 +74,9 @@ export default function DashboardPage({
             </div>
             <Avatar className="h-7 w-7 border border-white/10">
               <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
-              <AvatarFallback className="bg-white/10 text-white/60 text-[10px]">{initials}</AvatarFallback>
+              <AvatarFallback className="bg-white/10 text-white/60 text-[10px]">
+                {initials}
+              </AvatarFallback>
             </Avatar>
             <Button
               variant="ghost"
@@ -134,7 +127,9 @@ export default function DashboardPage({
         {rooms.length === 0 ? (
           <div className="flex flex-col items-center justify-center border border-dashed border-white/[0.07] rounded-xl py-20 text-center">
             <p className="text-sm text-white/25">No rooms yet</p>
-            <p className="text-xs text-white/15 mt-1">Create or join a room to get started</p>
+            <p className="text-xs text-white/15 mt-1">
+              Create or join a room to get started
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-white/[0.05] border border-white/[0.07] rounded-xl overflow-hidden">
@@ -155,7 +150,9 @@ export default function DashboardPage({
                       {room.name}
                     </p>
                     {room.lastMessage && (
-                      <p className="text-xs text-white/25 truncate mt-0.5">{room.lastMessage}</p>
+                      <p className="text-xs text-white/25 truncate mt-0.5">
+                        {room.lastMessage}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -164,13 +161,27 @@ export default function DashboardPage({
                     {room.isActive && (
                       <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
                     )}
-                    <span className="text-xs text-white/20">{room.memberCount}</span>
+                    <span className="text-xs text-white/20">
+                      {room.memberCount}
+                    </span>
                   </div>
                   {room.lastMessageAt && (
-                    <span className="text-xs text-white/20 hidden sm:block">{room.lastMessageAt}</span>
+                    <span className="text-xs text-white/20 hidden sm:block">
+                      {room.lastMessageAt}
+                    </span>
                   )}
-                  <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5 text-white/15 group-hover:text-white/40 transition-colors" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="h-3.5 w-3.5 text-white/15 group-hover:text-white/40 transition-colors"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                    />
                   </svg>
                 </div>
               </div>
@@ -183,7 +194,9 @@ export default function DashboardPage({
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="bg-[#111111] border-white/[0.08] text-white max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-sm font-semibold">Create a room</DialogTitle>
+            <DialogTitle className="text-sm font-semibold">
+              Create a room
+            </DialogTitle>
             <DialogDescription className="text-white/35 text-xs">
               Give your room a name others will recognize.
             </DialogDescription>
@@ -204,7 +217,11 @@ export default function DashboardPage({
                 Cancel
               </Button>
               <Button
-                onClick={() => { onCreateRoom(roomName); setRoomName(""); setShowCreate(false); }}
+                onClick={() => {
+                  onCreateRoom(roomName);
+                  setRoomName("");
+                  setShowCreate(false);
+                }}
                 className="flex-1 bg-white text-black hover:bg-white/90 text-sm h-9 font-medium"
               >
                 Create
@@ -218,7 +235,9 @@ export default function DashboardPage({
       <Dialog open={showJoin} onOpenChange={setShowJoin}>
         <DialogContent className="bg-[#111111] border-white/[0.08] text-white max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-sm font-semibold">Join a room</DialogTitle>
+            <DialogTitle className="text-sm font-semibold">
+              Join a room
+            </DialogTitle>
             <DialogDescription className="text-white/35 text-xs">
               Enter the code someone shared with you.
             </DialogDescription>
@@ -239,7 +258,11 @@ export default function DashboardPage({
                 Cancel
               </Button>
               <Button
-                onClick={() => { onJoinRoom(roomCode); setRoomCode(""); setShowJoin(false); }}
+                onClick={() => {
+                  onJoinRoom(roomCode);
+                  setRoomCode("");
+                  setShowJoin(false);
+                }}
                 className="flex-1 bg-white text-black hover:bg-white/90 text-sm h-9 font-medium"
               >
                 Join
