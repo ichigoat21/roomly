@@ -4,6 +4,7 @@ import "./config/passport"
 import { authMiddleware } from "./middlewares/auth.Middleware"
 import roomRouter from "./routes/room.Routes"
 import cors from "cors"
+import profileRouter from "./routes/profile.Route"
 
 
 const app = express()
@@ -12,5 +13,6 @@ app.use(express.json())
 app.use(cors())
 app.use('/auth', authRouter)
 app.use("/room", authMiddleware, roomRouter)
+app.use("/profile", authMiddleware, profileRouter)
 
 app.listen(3000, ()=> {console.log("Server Up")})

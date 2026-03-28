@@ -45,6 +45,7 @@ export const profileHandler = async (id: string) => {
     return {
       success: true,
       data: {
+        user : user,
         username: user.username,
         rooms
       }
