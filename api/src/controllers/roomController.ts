@@ -24,7 +24,7 @@ export const createRoomHandler = async (req : Request, res : Response)=> {
 export const joinRoomHandler = async (req : Request, res : Response)=>{
     try {
         const userId = req.userId!
-        const roomId = req.body.roomId
+        const roomId = Number(req.params.id)
 
         const memberId = handleRoomJoin(userId, roomId)
         res.json(200).json({memberId})

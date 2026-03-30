@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken"
 import { config } from "dotenv";
 import bcrypt from "bcrypt"
 
+
 config()
 
 export async function handleGoogleAuth(profile : any){
@@ -38,10 +39,13 @@ export async function handleSignup(username : string, password : string, email :
                 email
             }
         })
+        if(!user){
+            return {success : false, message : "Auth Failed"}
+        }
         const token = jwt.sign({
             userId : user.id
         }, process.env.SECRET!)
-        return {token}
+        return token
     } catch(err){
         return {success : false, message : err}
     }

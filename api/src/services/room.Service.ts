@@ -23,8 +23,8 @@ export const handleRoomCreate = async (userId : string, slug : string)=>{
     }
 }
 
-export const handleRoomJoin = async (userId : string, roomId : string)=>{
-    const Id = Number(roomId)
+export const handleRoomJoin = async (userId : string, roomId : number)=>{
+    const Id = roomId
     const existing = await client.roomMembers.findUnique({
         where: {
             userId_roomId: {

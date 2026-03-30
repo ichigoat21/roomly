@@ -12,7 +12,7 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 app.use('/auth', authRouter)
-app.use("/room", authMiddleware, roomRouter)
+app.use("/rooms", authMiddleware, roomRouter)
 app.use("/profile", authMiddleware, profileRouter)
 
 app.listen(3000, ()=> {console.log("Server Up")})

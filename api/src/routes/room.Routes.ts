@@ -4,6 +4,6 @@ import { createRoomHandler, joinRoomHandler } from "../controllers/roomControlle
 const roomRouter = Router()
 
 roomRouter.post("/create", createRoomHandler)
-roomRouter.post("/join", joinRoomHandler)
+roomRouter.post("/join/:id", joinRoomHandler)
 
 export default roomRouter

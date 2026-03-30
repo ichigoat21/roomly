@@ -42,7 +42,7 @@ export default function AuthPage(){
                 localStorage.setItem("token", token)
                 router.push("/dashboard")
                 
-        
+                console.log(response.data)
                 console.log(token)
         
             } catch (err: any) {

@@ -16,8 +16,8 @@ export interface Room {
   id: string;
   name: string;
   memberCount: number;
-  lastMessage?: string;
-  lastMessageAt?: string;
+  lastMessage?: string | null;
+  lastMessageAt?: string | null;
   isActive?: boolean;
 }
 
