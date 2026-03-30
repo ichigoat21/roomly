@@ -24,10 +24,11 @@ export const Signup = async (req : Request, res : Response)=>{
         const password = parsedData.data?.password
         const email = parsedData.data?.email
         const token= await handleSignup(username, password, email);
-        res.status(201).json({token : token})
+        return res.status(201).json({token : token})
     } catch(err) {
-        res.status(500).json({message : "Sorry Auth Failed"})
         console.log(err)
+        return res.status(500).json({message : "Sorry Auth Failed"})
+        
     }
 }
 export const Signin = async (req: Request, res: Response) => {

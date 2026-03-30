@@ -25,6 +25,7 @@ export const handleRoomCreate = async (userId : string, slug : string)=>{
 
 export const handleRoomJoin = async (userId : string, roomId : number)=>{
     const Id = roomId
+    console.log('RoomId',Id)
     const existing = await client.roomMembers.findUnique({
         where: {
             userId_roomId: {
@@ -34,16 +35,16 @@ export const handleRoomJoin = async (userId : string, roomId : number)=>{
         }
     })
     
-    if (existing) {
-        return "Already joined"
-    }
-    
-        
-        const room = await client.rooms.findFirst({
-            where : {
-                id : Id
+        if (existing) {
+            return {
+                success: false,
+                message: "Already joined"
             }
-        })
+        }
+    
+         const room = await client.rooms.findUnique({
+            where: { id: Id }
+         })
         const member = await client.roomMembers.create({
             data : {
                 userId : userId,
@@ -52,14 +53,17 @@ export const handleRoomJoin = async (userId : string, roomId : number)=>{
             }
         })
         const messages = await client.chats.findMany({
-            where :   { id : Id}, 
+            where :   { roomId : Id}, 
             orderBy : { id : "desc"},
             take : 50
         })
         return {
-            memberId: member.id,
-            slug: room?.slug,
-            messages : messages
+            success: true,
+            data: {
+                memberId: member.id,
+                slug: room?.slug,
+                messages
+            }
         }
     
 }

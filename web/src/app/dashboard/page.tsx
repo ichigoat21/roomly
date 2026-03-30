@@ -103,16 +103,18 @@ export default function App() {
     }
   }
 
-  async function joinRoom(roomId: string) {
-    if (!roomId.trim()) return;
+  async function joinRoom(roomID: string) {
+    if (!roomID.trim()) return;
     const token = localStorage.getItem("token");
+    const url = `http://localhost:3000/rooms/join/${roomID.trim()}`
 
     try {
-      await axios.get(`http://localhost:3000/rooms/join/${roomId.trim()}`, {
+      await axios.get(`http://localhost:3000/rooms/join/${roomID.trim()}`, {
         headers: { Authorization: `Bearer ${token}` },
-      });
+      })
+      console.log(url)
 
-      router.push(`/room/${roomId.trim()}`);
+      router.push(`/room/${roomID.trim()}`);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         router.replace("/auth");

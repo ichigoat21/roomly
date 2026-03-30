@@ -24,11 +24,13 @@ export const createRoomHandler = async (req : Request, res : Response)=> {
 export const joinRoomHandler = async (req : Request, res : Response)=>{
     try {
         const userId = req.userId!
+        console.log(req.params.id)
         const roomId = Number(req.params.id)
+        console.log(roomId)
 
-        const memberId = handleRoomJoin(userId, roomId)
-        res.json(200).json({memberId})
+        const memberId = await handleRoomJoin(userId, roomId)
+        return res.status(200).json({memberId})
     } catch (err){
-        res.status(500).json({message : "Something went wrong"})
+        return res.status(500).json({message : "Something went wrong"})
     }
 }
