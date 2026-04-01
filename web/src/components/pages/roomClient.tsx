@@ -61,7 +61,7 @@ export default function RoomClient({ roomID }: RoomClientProps) {
     const fetchRoom = async () => {
       try {
         const res = await axios.get(
-          `${process.env.NEXT_API_URL}/rooms/join/${roomID}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/rooms/join/${roomID}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -148,7 +148,7 @@ export default function RoomClient({ roomID }: RoomClientProps) {
     const token = localStorage.getItem("token");
 
     const connect = () => {
-      const ws = new WebSocket(`${process.env.NEXT_API_URL}?token=${token}`);
+      const ws = new WebSocket(`${process.env.NEXT_PUBLIC_API_URL}?token=${token}`);
       wsRef.current = ws;
 
       ws.onopen = () => {
