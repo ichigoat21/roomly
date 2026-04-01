@@ -2,8 +2,9 @@
   "scripts": {
     "start": "bun src/index.ts",
     "build": "tsc -b",
-    "dev": "tsc -b && bun dist/index.js",
-    "ws": "bun src/websockets/server.ts"
+    "ws": "bun src/websockets/server.ts",
+    "dev": "tsc -b && bun dist/index.js && bun run ws"
+    
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

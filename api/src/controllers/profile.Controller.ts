@@ -42,7 +42,6 @@ export const updatedProfileAvatarController = async (req : Request, res : Respon
   let result
   try {
     const avatarUrl = (req.file)?.path
-    console.log(avatarUrl)
    
     const id = req.userId
     if(!avatarUrl){

@@ -5,7 +5,6 @@ import { Profile } from "passport";
 
 export const googleCallback = async (req: Request, res: Response) => {
     try {
-        console.log(req.user)
         const profile = req.user as Profile | undefined;
  
         if (!profile) {

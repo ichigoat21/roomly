@@ -7,7 +7,7 @@ import messageValidation from "../validation/message.Types"
 
 config()
 
-const wss = new WebSocketServer({ port: 8080 })
+const wss = new WebSocketServer({ port: 8080 }, ()=> { console.log("Server Open")})
 
 interface User {
     ws: WebSocket
