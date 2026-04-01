@@ -288,7 +288,7 @@ export function ProfileRoutePage() {
 
     // Fetch current user profile
     axios
-      .get(`${process.env.NEXT_API_URL}/profile/me`, {
+      .get(`${process.env.NEXT_PUBLIC_API_URL}/profile/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -313,7 +313,7 @@ export function ProfileRoutePage() {
   // Update username
   async function handleUpdateUsername(username: string) {
     await axios.patch(
-      `${process.env.NEXT_API_URL}/profile/change`,
+      `${process.env.NEXT_PUBLIC_API_URL}/profile/change`,
       { username },
       { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
     );
@@ -327,7 +327,7 @@ export function ProfileRoutePage() {
     const formData = new FormData();
     formData.append("avatar", file);
     const res = await axios.post(
-      `${process.env.NEXT_API_URL}/avatar`,
+      `${process.env.NEXT_PUBLIC_API_URL}/avatar`,
       formData,
       { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
     );

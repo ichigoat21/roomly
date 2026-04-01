@@ -24,7 +24,7 @@ export default function App() {
 
   async function fetchUserProfile(token: string) {
     try {
-      const response = await axios.get(`${process.env.NEXT_API_URL}/profile/me`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/profile/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log(response.data)
@@ -67,7 +67,7 @@ export default function App() {
 
   async function onUpdateUsername(username: string) {
     await axios.patch(
-      `${process.env.NEXT_API_URL}/profile/change`,
+      `${process.env.NEXT_PUBLIC_API_URL}/profile/change`,
       { username },
       { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
     );
@@ -78,7 +78,7 @@ export default function App() {
     const fd = new FormData();
     fd.append("avatar", file);
     const res = await axios.post(
-      `${process.env.NEXT_API_URL}/profile/avatar`,
+      `${process.env.NEXT_PUBLIC_API_URL}/profile/avatar`,
       fd,
       { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
     );
@@ -95,7 +95,7 @@ export default function App() {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.post(
-        `${process.env.NEXT_API_URL}/rooms/create`,
+        `${process.env.NEXT_PUBLIC_API_URL}/rooms/create`,
         { slug: slug.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -118,7 +118,7 @@ export default function App() {
     if (!roomId.trim()) return;
     const token = localStorage.getItem("token");
     try {
-      await axios.get(`${process.env.NEXT_API_URL}/rooms/join/${roomId.trim()}`, {
+      await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/rooms/join/${roomId.trim()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       router.push(`/room/${roomId.trim()}`);
