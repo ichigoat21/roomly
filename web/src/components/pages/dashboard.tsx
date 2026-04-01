@@ -11,13 +11,15 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileModal } from "@/components/pages/profile";
+import type { ProfileUser } from "@/components/pages/profile";
 
 export interface Room {
   id: string;
   name: string;
   memberCount: number;
-  lastMessage?: string | null;
-  lastMessageAt?: string | null;
+  lastMessage?: string;
+  lastMessageAt?: string;
   isActive?: boolean;
 }
 
@@ -34,22 +36,36 @@ interface DashboardPageProps {
   onJoinRoom?: (roomCode: string) => void;
   onEnterRoom?: (roomId: string) => void;
   onSignOut?: () => void;
+  onUpdateUsername?: (username: string) => Promise<void>;
+  onUpdateAvatar?: (file: File) => Promise<void>;
 }
 
+const DUMMY_USER: User = {
+  name: "Ada Lovelace",
+  email: "ada@example.com",
+};
+
+const DUMMY_ROOMS: Room[] = [
+  { id: "1", name: "design-team", memberCount: 5, lastMessage: "Let's sync tomorrow", lastMessageAt: "2:30 PM", isActive: true },
+  { id: "2", name: "backend-crew", memberCount: 3, lastMessage: "PR is ready for review", lastMessageAt: "11:14 AM", isActive: false },
+  { id: "3", name: "general", memberCount: 12, lastMessage: "Good morning everyone!", lastMessageAt: "9:01 AM", isActive: true },
+];
+
 export default function DashboardPage({
-  currentUser,
-  rooms = [],
+  currentUser = DUMMY_USER,
+  rooms = DUMMY_ROOMS,
   onCreateRoom = () => {},
   onJoinRoom = () => {},
   onEnterRoom = () => {},
   onSignOut = () => {},
+  onUpdateUsername = async () => {},
+  onUpdateAvatar = async () => {},
 }: DashboardPageProps) {
   const [showCreate, setShowCreate] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [roomName, setRoomName] = useState("");
   const [roomCode, setRoomCode] = useState("");
-
-  if (!currentUser) return null;
 
   const initials = currentUser.name
     .split(" ")
@@ -57,6 +73,13 @@ export default function DashboardPage({
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+  // Map User → ProfileUser shape that ProfileModal expects
+  const profileUser: ProfileUser = {
+    username: currentUser.name,
+    email: currentUser.email,
+    avatarUrl: currentUser.avatarUrl,
+  };
 
   return (
     <div
@@ -72,12 +95,20 @@ export default function DashboardPage({
               <span className="text-xs text-white/60">{currentUser.name}</span>
               <span className="text-[11px] text-white/25">{currentUser.email}</span>
             </div>
-            <Avatar className="h-7 w-7 border border-white/10">
-              <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
-              <AvatarFallback className="bg-white/10 text-white/60 text-[10px]">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+
+            {/* Clickable avatar → opens profile modal */}
+            <button
+              onClick={() => setShowProfile(true)}
+              className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 transition-opacity hover:opacity-80"
+            >
+              <Avatar className="h-7 w-7 border border-white/10">
+                <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
+                <AvatarFallback className="bg-white/10 text-white/60 text-[10px]">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+
             <Button
               variant="ghost"
               size="sm"
@@ -127,9 +158,7 @@ export default function DashboardPage({
         {rooms.length === 0 ? (
           <div className="flex flex-col items-center justify-center border border-dashed border-white/[0.07] rounded-xl py-20 text-center">
             <p className="text-sm text-white/25">No rooms yet</p>
-            <p className="text-xs text-white/15 mt-1">
-              Create or join a room to get started
-            </p>
+            <p className="text-xs text-white/15 mt-1">Create or join a room to get started</p>
           </div>
         ) : (
           <div className="divide-y divide-white/[0.05] border border-white/[0.07] rounded-xl overflow-hidden">
@@ -150,38 +179,20 @@ export default function DashboardPage({
                       {room.name}
                     </p>
                     {room.lastMessage && (
-                      <p className="text-xs text-white/25 truncate mt-0.5">
-                        {room.lastMessage}
-                      </p>
+                      <p className="text-xs text-white/25 truncate mt-0.5">{room.lastMessage}</p>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center gap-4 flex-shrink-0 ml-4">
                   <div className="flex items-center gap-1.5">
-                    {room.isActive && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
-                    )}
-                    <span className="text-xs text-white/20">
-                      {room.memberCount}
-                    </span>
+                    {room.isActive && <span className="w-1.5 h-1.5 rounded-full bg-white/40" />}
+                    <span className="text-xs text-white/20">{room.memberCount}</span>
                   </div>
                   {room.lastMessageAt && (
-                    <span className="text-xs text-white/20 hidden sm:block">
-                      {room.lastMessageAt}
-                    </span>
+                    <span className="text-xs text-white/20 hidden sm:block">{room.lastMessageAt}</span>
                   )}
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="h-3.5 w-3.5 text-white/15 group-hover:text-white/40 transition-colors"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                    />
+                  <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5 text-white/15 group-hover:text-white/40 transition-colors" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                   </svg>
                 </div>
               </div>
@@ -190,13 +201,20 @@ export default function DashboardPage({
         )}
       </main>
 
-      {/* Create Dialog */}
+      {/* ── Profile Modal ── */}
+      <ProfileModal
+        open={showProfile}
+        onClose={() => setShowProfile(false)}
+        user={profileUser}
+        onUpdateUsername={onUpdateUsername}
+        onUpdateAvatar={onUpdateAvatar}
+      />
+
+      {/* ── Create Room Dialog ── */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="bg-[#111111] border-white/[0.08] text-white max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-sm font-semibold">
-              Create a room
-            </DialogTitle>
+            <DialogTitle className="text-sm font-semibold">Create a room</DialogTitle>
             <DialogDescription className="text-white/35 text-xs">
               Give your room a name others will recognize.
             </DialogDescription>
@@ -206,6 +224,13 @@ export default function DashboardPage({
               placeholder="e.g. design-team"
               value={roomName}
               onChange={(e) => setRoomName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && roomName.trim()) {
+                  onCreateRoom(roomName);
+                  setRoomName("");
+                  setShowCreate(false);
+                }
+              }}
               className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:ring-white/20 h-9 text-sm"
             />
             <div className="flex gap-2">
@@ -217,11 +242,7 @@ export default function DashboardPage({
                 Cancel
               </Button>
               <Button
-                onClick={() => {
-                  onCreateRoom(roomName);
-                  setRoomName("");
-                  setShowCreate(false);
-                }}
+                onClick={() => { onCreateRoom(roomName); setRoomName(""); setShowCreate(false); }}
                 className="flex-1 bg-white text-black hover:bg-white/90 text-sm h-9 font-medium"
               >
                 Create
@@ -231,13 +252,11 @@ export default function DashboardPage({
         </DialogContent>
       </Dialog>
 
-      {/* Join Dialog */}
+      {/* ── Join Room Dialog ── */}
       <Dialog open={showJoin} onOpenChange={setShowJoin}>
         <DialogContent className="bg-[#111111] border-white/[0.08] text-white max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-sm font-semibold">
-              Join a room
-            </DialogTitle>
+            <DialogTitle className="text-sm font-semibold">Join a room</DialogTitle>
             <DialogDescription className="text-white/35 text-xs">
               Enter the code someone shared with you.
             </DialogDescription>
@@ -247,6 +266,13 @@ export default function DashboardPage({
               placeholder="e.g. ABC-1234"
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && roomCode.trim()) {
+                  onJoinRoom(roomCode);
+                  setRoomCode("");
+                  setShowJoin(false);
+                }
+              }}
               className="bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 focus-visible:ring-white/20 h-9 text-sm font-mono tracking-widest"
             />
             <div className="flex gap-2">
@@ -258,11 +284,7 @@ export default function DashboardPage({
                 Cancel
               </Button>
               <Button
-                onClick={() => {
-                  onJoinRoom(roomCode);
-                  setRoomCode("");
-                  setShowJoin(false);
-                }}
+                onClick={() => { onJoinRoom(roomCode); setRoomCode(""); setShowJoin(false); }}
                 className="flex-1 bg-white text-black hover:bg-white/90 text-sm h-9 font-medium"
               >
                 Join

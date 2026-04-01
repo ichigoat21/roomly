@@ -1,19 +1,30 @@
 import { Request, Response } from "express"
 import { handleGoogleAuth, handleSignin, handleSignup } from "../services/auth.Service"
 import { userValidator } from "../validation/auth.Types"
+import { Profile } from "passport";
 
-export const googleCallback = async (req : Request, res : Response)=> {
+export const googleCallback = async (req: Request, res: Response) => {
     try {
-        const profile = req.user 
-        console.log(profile)
-        const {token} =  await handleGoogleAuth(profile)
-        res.redirect(`http://localhost:3001/dashboard?token=${token}`)
-    } catch(err) {
-        res.status(500).json({message : "Sorry Auth Failed"})
-        console.log(err)
-    }
-}
+        console.log(req.user)
+        const profile = req.user as Profile | undefined;
+ 
+        if (!profile) {
+          
+            return res.redirect("http://localhost:3001/auth");
+        }
+ 
+        const { token, isNewUser } = await handleGoogleAuth(profile);
 
+        res.redirect(
+            `http://localhost:3001/auth/google/callback?token=${token}&isNewUser=${isNewUser}`
+        );
+ 
+    } catch (err) {
+        console.log(err);
+        res.redirect("http://localhost:3001/auth");
+    }
+};
+ 
 export const Signup = async (req : Request, res : Response)=>{
     try {
         const parsedData = userValidator.safeParse(req.body)

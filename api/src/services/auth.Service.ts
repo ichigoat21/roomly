@@ -1,32 +1,40 @@
 import { client } from "../lib/lib";
-import jwt from "jsonwebtoken"
-import { config } from "dotenv";
 import bcrypt from "bcrypt"
+import { generateRandomString } from "../config/username";
+import { generateJWT } from "../lib/jwt";
+import { Profile } from "passport";
 
 
-config()
 
-export async function handleGoogleAuth(profile : any){
-    let user = await client.users.findUnique({
-        where : {
-            googleId : profile.id
-        }
-    }) 
-    if(!user) {
-        user = await client.users.create({
-            data : {
-                username : profile.displayName,
-                email: profile.emails?.[0]?.value,
-                googleId : profile.id 
-            }
-        })
+
+
+
+export async function handleGoogleAuth(profile: Profile) {
+    const email = profile.emails?.[0]?.value;
+
+    if (!email) {
+        throw new Error("No email found in Google profile");
     }
-    const token = jwt.sign(
-        { userId: user.id },
-        process.env.SECRET!,
-        { expiresIn: "7d" }
-      );
-    return {user, token}
+
+    let user = await client.users.findUnique({
+        where: { email }
+    });
+
+    let isNewUser = false;
+
+    if (!user) {
+        user = await client.users.create({
+            data: {
+                email,
+                username: generateRandomString(),
+            }
+        });
+        isNewUser = true;
+    }
+
+    const token = generateJWT(user.id);
+
+    return { token, isNewUser };
 }
 
 export async function handleSignup(username : string, password : string, email : string){
@@ -42,9 +50,7 @@ export async function handleSignup(username : string, password : string, email :
         if(!user){
             return {success : false, message : "Auth Failed"}
         }
-        const token = jwt.sign({
-            userId : user.id
-        }, process.env.SECRET!)
+        const token = generateJWT(user.id)
         return token
     } catch(err){
         return {success : false, message : err}
@@ -67,10 +73,7 @@ export async function handleSignin(email: string, password: string) {
         return { success: false, message: "Wrong Password" };
     }
 
-    const token = jwt.sign(
-        { userId: user.id },
-        process.env.SECRET!
-    );
+    const token = generateJWT(user.id)
 
     return { success: true, token };
 }

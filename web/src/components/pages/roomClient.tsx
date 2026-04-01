@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import ChatPage, { ChatMessage, RoomMember } from "@/components/ui/chat";
+import ChatPage, {ChatMessage, RoomMember} from "./chat";
 import axios from "axios";
 
 // Matches exactly what the server broadcasts for a chat event

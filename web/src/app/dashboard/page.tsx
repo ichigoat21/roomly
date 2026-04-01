@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import DashboardPage, { Room, User } from "./dashboard";
+import DashboardPage, { Room, User } from "@/components/pages/dashboard";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -24,20 +24,24 @@ export default function App() {
     }
 
     fetchUserProfile(token);
-  }, []); // only run once on mount — params won't change after that
+  }, []);
 
   async function fetchUserProfile(token: string) {
     try {
       const response = await axios.get("http://localhost:3000/profile/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log(response.data)
+      
 
       setUser({
         name: response.data.username,
         email: response.data.user.email,
+        avatarUrl: response.data.image
       });
+      console.log(user?.name)
+      console.log(user?.avatarUrl)
 
-      // Normalize rooms so null fields don't blow up the UI
       const raw = response.data.rooms ?? [];
       setRooms(
         raw.map((r: {
@@ -65,34 +69,45 @@ export default function App() {
     }
   }
 
+  async function onUpdateUsername(username: string) {
+    await axios.patch(
+      "http://localhost:3000/profile/change",
+      { username },
+      { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+    );
+    setUser((prev) => prev ? { ...prev, name: username } : prev);
+  }
+
+  async function onUpdateAvatar(file: File) {
+    const fd = new FormData();
+    fd.append("avatar", file);
+    const res = await axios.post(
+      "http://localhost:3000/profile/avatar",
+      fd,
+      { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+    );
+    const avatarUrl: string = res.data.image;
+    console.log(avatarUrl)
+    // Bust browser cache so <img> actually fetches the new avatar
+    setUser((prev) =>
+      prev ? { ...prev, avatarUrl: `${avatarUrl}?t=${Date.now()}` } : prev
+    );
+  }
+
   async function createRoom(slug: string) {
     if (!slug.trim()) return;
     const token = localStorage.getItem("token");
-
     try {
       const response = await axios.post(
         "http://localhost:3000/rooms/create",
         { slug: slug.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       const roomId = response.data.room;
-      console.log(roomId)
-      console.log(response.data)
-
-      // Optimistically add room to list
       setRooms((prev) => [
-        {
-          id: roomId,
-          name: slug.trim(),
-          memberCount: 1,
-          lastMessage: undefined,
-          lastMessageAt: undefined,
-        },
+        { id: roomId, name: slug.trim(), memberCount: 1 },
         ...prev,
       ]);
-
-      // Navigate with Next router — no full page reload
       router.push(`/room/${roomId}`);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
@@ -103,18 +118,14 @@ export default function App() {
     }
   }
 
-  async function joinRoom(roomID: string) {
-    if (!roomID.trim()) return;
+  async function joinRoom(roomId: string) {
+    if (!roomId.trim()) return;
     const token = localStorage.getItem("token");
-    const url = `http://localhost:3000/rooms/join/${roomID.trim()}`
-
     try {
-      await axios.get(`http://localhost:3000/rooms/join/${roomID.trim()}`, {
+      await axios.get(`http://localhost:3000/rooms/join/${roomId.trim()}`, {
         headers: { Authorization: `Bearer ${token}` },
-      })
-      console.log(url)
-
-      router.push(`/room/${roomID.trim()}`);
+      });
+      router.push(`/room/${roomId.trim()}`);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         router.replace("/auth");
@@ -133,7 +144,6 @@ export default function App() {
     router.replace("/auth");
   }
 
-  // ── States ────────────────────────────────────────────────────────────────
   if (loadingError) {
     return (
       <div className="h-screen bg-[#0c0c0c] flex flex-col items-center justify-center gap-3">
@@ -158,12 +168,15 @@ export default function App() {
 
   return (
     <DashboardPage
+      key={`${user.name}-${user.avatarUrl}`}
       currentUser={user}
       rooms={rooms}
       onCreateRoom={createRoom}
       onJoinRoom={joinRoom}
       onEnterRoom={onEnterRoom}
       onSignOut={onSignOut}
+      onUpdateUsername={onUpdateUsername}
+      onUpdateAvatar={onUpdateAvatar}
     />
   );
 }

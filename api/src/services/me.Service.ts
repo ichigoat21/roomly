@@ -1,4 +1,6 @@
+import { success } from "zod"
 import { client } from "../lib/lib"
+import { ur } from "zod/v4/locales"
 
 export const profileHandler = async (id: string) => {
   try {
@@ -47,6 +49,7 @@ export const profileHandler = async (id: string) => {
       data: {
         user : user,
         username: user.username,
+        image : user.avatar,
         rooms
       }
     }
@@ -58,4 +61,40 @@ export const profileHandler = async (id: string) => {
       data: null
     }
   }
+}
+
+export const updateProfileHandler = async (
+  id: string,
+  username?: string,
+  avatarUrl?: string
+) => {
+  try {
+    const updatedUser = await client.users.update({
+      where: { id },
+      data: {
+        ...(username && { username }),
+        ...(avatarUrl && { avatarUrl })
+      }
+    })
+  
+    return {success : true, user : updatedUser}
+  } catch (err){
+    return {success : false, message : "Something went wrong"}
+  }
+  
+}
+
+export const handleProfilePicture = async (url : string, id : string)=>{
+  try {
+  const updatedUserAvatar = await client.users.update({
+    where : {
+      id : id
+    }, data : {
+      avatar : url
+    }
+  })
+  return {success : true, avataredUser : updatedUserAvatar}
+   } catch (err){
+    return {success : false, message : "Cannot Change/Upload Picture"}
+   }
 }

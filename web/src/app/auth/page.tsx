@@ -1,6 +1,6 @@
 "use client"
 import { useRouter } from "next/navigation";
-import AuthComponent from "./auth";
+import AuthComponent from "@/components/pages/auth";
 import axios from "axios";
 
 
@@ -20,13 +20,26 @@ type SigninResponse = {
     token : string
 }
 
+// Add a new type for Google sign-in response
+type GoogleSignInResponse = {
+    user: {
+        id: string
+        email: string
+        username?: string
+        isNewUser?: boolean
+    }, 
+    token : string
+}
+
 
 export default function AuthPage(){
     const router = useRouter()
 
     function onGoogleSignIn(){
+        localStorage.setItem("googleSignInRedirect", "true");
         window.location.href = "http://localhost:3000/auth/google"
     }
+    
     async function onSignup(username : string, email : string, password : string){
             try {
                 const response = await axios.post<SignupResponse>(
@@ -40,7 +53,9 @@ export default function AuthPage(){
         
                 const token = response.data.token
                 localStorage.setItem("token", token)
-                router.push("/dashboard")
+                
+                // For new user signup, redirect to profile page
+                router.push("/profile")
                 
                 console.log(response.data)
                 console.log(token)
@@ -49,6 +64,7 @@ export default function AuthPage(){
                 console.error(err.response?.data?.message || "Signup failed")
             }
     }
+    
     async function onSignin(email :string, password : string){
         try {
             const response = await axios.post<SigninResponse>("http://localhost:3000/auth/signin", ({
@@ -57,11 +73,46 @@ export default function AuthPage(){
         }))
         const token = response.data.token
         localStorage.setItem("token", token)
+        
+        // For existing user signin, redirect to dashboard
         router.push("/dashboard")
+        
     } catch (err : any){
         console.error(err.response?.data?.message || "Signup failed")
     }
         
     }
+    
+    // You'll also need to handle the Google callback page separately
+    // This function should be called in your Google callback route/page
+    async function handleGoogleCallback() {
+        const shouldCheckNewUser = localStorage.getItem("googleSignInRedirect");
+        
+        if (shouldCheckNewUser === "true") {
+            localStorage.removeItem("googleSignInRedirect");
+            
+            try {
+                // Assuming your backend sends back user data including isNewUser flag
+                // You'll need to get this data from your callback URL params or API
+                const response = await axios.get<GoogleSignInResponse>(
+                    "http://localhost:3000/auth/google/callback"
+                );
+                
+                const token = response.data.token;
+                localStorage.setItem("token", token);
+                
+                // Check if this is a new user
+                if (response.data.user.isNewUser) {
+                    router.push("/profile");
+                } else {
+                    router.push("/dashboard");
+                }
+            } catch (err: any) {
+                console.error("Google sign-in failed:", err.response?.data?.message || "Error");
+                router.push("/auth");
+            }
+        }
+    }
+    
     return <AuthComponent onGoogleSignIn={onGoogleSignIn} onSignup={onSignup} onLogin={onSignin} />
 }
