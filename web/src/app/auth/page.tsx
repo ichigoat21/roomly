@@ -37,13 +37,13 @@ export default function AuthPage(){
 
     function onGoogleSignIn(){
         localStorage.setItem("googleSignInRedirect", "true");
-        window.location.href = "http://localhost:3000/auth/google"
+        window.location.href = `${process.env.NEXT_API_URL}/auth/google`
     }
     
     async function onSignup(username : string, email : string, password : string){
             try {
                 const response = await axios.post<SignupResponse>(
-                    "http://localhost:3000/auth/signup",
+                    `${process.env.NEXT_API_URL}/auth/signup`,
                     {
                         username,
                         email,
@@ -67,7 +67,7 @@ export default function AuthPage(){
     
     async function onSignin(email :string, password : string){
         try {
-            const response = await axios.post<SigninResponse>("http://localhost:3000/auth/signin", ({
+            const response = await axios.post<SigninResponse>(`${process.env.NEXT_API_URL}/auth/signin`, ({
             email,
             password
         }))
@@ -95,7 +95,7 @@ export default function AuthPage(){
                 // Assuming your backend sends back user data including isNewUser flag
                 // You'll need to get this data from your callback URL params or API
                 const response = await axios.get<GoogleSignInResponse>(
-                    "http://localhost:3000/auth/google/callback"
+                    `${process.env.NEXT_API_URL}/auth/google/callback`
                 );
                 
                 const token = response.data.token;
