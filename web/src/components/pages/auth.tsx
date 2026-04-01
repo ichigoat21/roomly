@@ -45,7 +45,7 @@ export default function AuthComponent({
 
         {/* Brand */}
         <div className="mb-10 text-center">
-          <span className="text-sm font-semibold tracking-tight text-white">Halo</span>
+          <span className="text-sm font-semibold tracking-tight text-white">roomly..</span>
           <p className="mt-4 text-2xl font-semibold tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>
             {mode === "login" ? "Welcome back" : "Create account"}
           </p>

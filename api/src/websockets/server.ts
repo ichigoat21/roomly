@@ -1,4 +1,4 @@
-import { WebSocketServer } from "ws"
+import { RawData, WebSocketServer } from "ws"
 import WebSocket from "ws"
 import jwt, { JwtPayload } from "jsonwebtoken"
 import { config } from "dotenv"
@@ -7,13 +7,13 @@ import messageValidation from "../validation/message.Types"
 
 config()
 
-const wss = new WebSocketServer({ port: 8080 }, ()=> { console.log("Server Open")})
+
 
 interface User {
     ws: WebSocket
     rooms: string[]
     userId: string
-    userName: string   // store name on connect so we can include it in broadcasts
+    userName: string   
 }
 
 const users: User[] = []
@@ -31,7 +31,8 @@ const decoded = (token: string): { userId: string; userName: string } | null => 
     }
 }
 
-wss.on("connection", (ws, request) => {
+export function initWebsocket(wss : WebSocketServer) {
+    wss.on("connection", (ws, request) => {
     const url = request.url
     const queryParams = new URLSearchParams(url?.split("?")[1])
     const token = queryParams.get("token")
@@ -52,7 +53,7 @@ wss.on("connection", (ws, request) => {
 
     users.push(user)
 
-    ws.on("message", async (data) => {
+    ws.on("message", async (data : RawData) => {
         let parsedData
         try {
             parsedData = JSON.parse(data.toString())
@@ -125,4 +126,4 @@ wss.on("connection", (ws, request) => {
         const index = users.findIndex(u => u.ws === ws)
         if (index !== -1) users.splice(index, 1)
     })
-})
+})} 

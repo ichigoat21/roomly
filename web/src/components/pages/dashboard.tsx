@@ -89,7 +89,7 @@ export default function DashboardPage({
       {/* Navbar */}
       <header className="border-b border-white/[0.06] px-6 py-3.5">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <span className="text-sm font-semibold tracking-tight">Halo</span>
+          <span className="text-sm font-semibold tracking-tight">roomly..</span>
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex flex-col items-end">
               <span className="text-xs text-white/60">{currentUser.name}</span>
