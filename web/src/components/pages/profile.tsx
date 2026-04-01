@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -270,7 +270,6 @@ export default function ProfilePage({
 // This is the actual Next.js page component that handles token, fetches user,
 // and wires everything together. Copy this into app/profile/page.tsx
 export function ProfileRoutePage() {
-  const params = useSearchParams();
   const router = useRouter();
 
   // ALL hooks must be at the top — never inside conditions
