@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function App() {
-  const params = useSearchParams();
   const router = useRouter();
 
   const [user, setUser] = useState<User | null>(null);
@@ -14,10 +13,7 @@ export default function App() {
   const [loadingError, setLoadingError] = useState<string | null>(null);
 
   useEffect(() => {
-    const urlToken = params.get("token");
-    if (urlToken) localStorage.setItem("token", urlToken);
-
-    const token = urlToken || localStorage.getItem("token");
+    const token = localStorage.getItem("token");
     if (!token) {
       router.replace("/auth");
       return;
