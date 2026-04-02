@@ -9,7 +9,7 @@ passport.use(
     {
       clientID: process.env.CLIENT_ID!,
       clientSecret: process.env.CLIENT_SECRET!,
-      callbackURL: `${process.env.API_URL}/auth/google/callback`,
+      callbackURL: `https://roomly-3xwk.vercel.app/auth/google/callback`,
       scope: ["email", "profile"], // Add scope here in the strategy configuration
     },
     (accessToken, refreshToken, profile, done) => {
