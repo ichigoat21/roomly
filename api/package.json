@@ -25,7 +25,11 @@
     "passport": "^0.7.0",
     "passport-google-oauth2": "^0.2.0",
     "prisma": "^5.22.0",
+    "typescript": "^6.0.2",
     "ws": "^8.20.0",
     "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0"
   }
 }
