@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "postinstall": "prisma generate",
     "start": "bun src/index.ts",
     "build": "tsc -b",
     "ws": "bun src/websockets/server.ts",
