@@ -34,9 +34,11 @@ type GoogleSignInResponse = {
 
 export default function AuthPage(){
     const router = useRouter()
+    console.log(process.env.NEXT_PUBLIC_API_URL)
 
     function onGoogleSignIn(){
         localStorage.setItem("googleSignInRedirect", "true");
+        console.log(process.env.NEXT_PUBLIC_API_URL)
         window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`
     }
     

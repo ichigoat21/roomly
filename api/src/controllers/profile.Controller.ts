@@ -1,5 +1,6 @@
 import { Request, Response } from "express"
 import { handleProfilePicture, profileHandler, updateProfileHandler } from "../services/me.Service"
+import { uploadToCloudinary } from "../config/multer"
 
 
 export const profileController = async (req: Request, res: Response) => {
@@ -38,23 +39,31 @@ export const updateProfileController = async (req : Request, res : Response)=>{
   }
 }
 
-export const updatedProfileAvatarController = async (req : Request, res : Response)=>{
-  let result
+export const updatedProfileAvatarController = async (req: Request, res: Response) => {
   try {
-    const avatarUrl = (req.file)?.path
-   
     const id = req.userId
-    if(!avatarUrl){
-      return res.status(403).json({message : "Bad Request"})
+ 
+    if (!id) {
+      return res.status(401).json({ message: "Unauthorized" })
     }
-    if(!id){
-      return res.status(401).json({message : "Something went wrong"})
+ 
+    // memoryStorage → file lives in req.file.buffer, not req.file.path
+    if (!req.file?.buffer) {
+      return res.status(400).json({ message: "No file uploaded" })
     }
-    result = await handleProfilePicture(avatarUrl, id)
-    return  res.status(201).json({image : result.avataredUser?.avatar})
-  } catch(err){
-    console.log(err)
-    return res.status(500).json({message : result?.message})
+ 
+    // Push buffer straight to cloudinary, get back a secure URL
+    const avatarUrl = await uploadToCloudinary(req.file.buffer)
+ 
+    const result = await handleProfilePicture(avatarUrl, id)
+ 
+    if (!result.success) {
+      return res.status(500).json({ message: result.message })
+    }
+ 
+    return res.status(201).json({ image: result.avataredUser?.avatar })
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ message: "Failed to upload avatar" })
   }
-
 }

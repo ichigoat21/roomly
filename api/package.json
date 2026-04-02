@@ -4,7 +4,6 @@
     "build": "tsc -b",
     "ws": "bun src/websockets/server.ts",
     "dev": "tsc -b && bun dist/index.js && bun run ws"
-    
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -23,7 +22,6 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
-    "multer-storage-cloudinary": "^4.0.0",
     "passport": "^0.7.0",
     "passport-google-oauth2": "^0.2.0",
     "prisma": "^5.22.0",
