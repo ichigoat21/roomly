@@ -13,7 +13,7 @@ authRouter.get("/google",
 
 authRouter.get("/google/callback", 
     passport.authenticate("google", {
-        failureRedirect : "http://localhost:3001/auth",
+        failureRedirect : `${process.env.WEB_URL}/auth`,
         session : false
     }),
     googleCallback

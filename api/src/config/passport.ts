@@ -9,7 +9,7 @@ passport.use(
     {
       clientID: process.env.CLIENT_ID!,
       clientSecret: process.env.CLIENT_SECRET!,
-      callbackURL: "http://localhost:3000/auth/google/callback",
+      callbackURL: `${process.env.API_URL}/auth/google/callback`,
       scope: ["email", "profile"], // Add scope here in the strategy configuration
     },
     (accessToken, refreshToken, profile, done) => {

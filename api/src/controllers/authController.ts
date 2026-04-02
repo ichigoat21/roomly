@@ -9,18 +9,18 @@ export const googleCallback = async (req: Request, res: Response) => {
  
         if (!profile) {
           
-            return res.redirect("http://localhost:3001/auth");
+            return res.redirect(`${process.env.WEB_URL}/auth`);
         }
  
         const { token, isNewUser } = await handleGoogleAuth(profile);
 
         res.redirect(
-            `http://localhost:3001/auth/google/callback?token=${token}&isNewUser=${isNewUser}`
+            `${process.env.WEB_URL}/auth/google/callback?token=${token}&isNewUser=${isNewUser}`
         );
  
     } catch (err) {
         console.log(err);
-        res.redirect("http://localhost:3001/auth");
+        res.redirect(`${process.env.WEB_URL}/auth`);
     }
 };
  
