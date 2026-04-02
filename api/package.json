@@ -3,7 +3,7 @@
     "postinstall": "prisma generate",
     "start": "bun src/index.ts",
     "build": "tsc -b",
-    "ws": "bun src/websockets/server.ts",
+    "ws": "bun src/websocket.ts",
     "dev": "tsc -b && bun dist/index.js && prisma generate"
   },
   "dependencies": {
