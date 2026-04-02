@@ -19,6 +19,7 @@ const users: User[] = []
 const decoded = (token: string): { userId: string; userName: string } | null => {
     try {
         const payload = jwt.verify(token, process.env.SECRET!) as JwtPayload
+        console.log(process.env.SECRET)
         return {
             userId: payload.userId,
             userName: payload.username ?? payload.name ?? "Unknown",
