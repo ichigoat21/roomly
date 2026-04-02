@@ -33,8 +33,10 @@ const decoded = (token: string): { userId: string; userName: string } | null => 
 
 export function initWebsocket(wss : WebSocketServer) {
     wss.on("connection", (ws, request) => {
+   
     const url = request.url
     const queryParams = new URLSearchParams(url?.split("?")[1])
+    console.log(url)
     const token = queryParams.get("token")
 
     const identity = token ? decoded(token) : null

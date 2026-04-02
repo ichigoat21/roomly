@@ -149,6 +149,7 @@ export default function RoomClient({ roomID }: RoomClientProps) {
 
     const connect = () => {
       const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL}?token=${token}`);
+      console.log(ws)
       wsRef.current = ws;
 
       ws.onopen = () => {
