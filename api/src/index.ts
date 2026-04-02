@@ -16,7 +16,10 @@ const wss = new WebSocketServer({server})
 initWebsocket(wss)
 
 app.use(express.json())
-app.use(cors())
+app.use(cors({
+    origin: "https://roomly-chat.vercel.app",
+    credentials: true
+  }));
 app.use('/auth', authRouter)
 app.use("/rooms", authMiddleware, roomRouter)
 app.use("/profile", authMiddleware, profileRouter)
