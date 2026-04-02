@@ -2,7 +2,9 @@ import { Request, Response } from "express"
 import { handleGoogleAuth, handleSignin, handleSignup } from "../services/auth.Service"
 import { userValidator } from "../validation/auth.Types"
 import { Profile } from "passport";
+import { config } from "dotenv";
 
+config()
 export const googleCallback = async (req: Request, res: Response) => {
     try {
         const profile = req.user as Profile | undefined;
