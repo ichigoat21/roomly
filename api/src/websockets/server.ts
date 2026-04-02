@@ -7,6 +7,7 @@ import messageValidation from "../validation/message.Types"
 
 config()
 
+
 interface User {
     ws: WebSocket
     rooms: string[]
