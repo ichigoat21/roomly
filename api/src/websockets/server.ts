@@ -4,6 +4,7 @@ import jwt, { JwtPayload } from "jsonwebtoken"
 import { config } from "dotenv"
 import { client } from "../lib/lib"
 import messageValidation from "../validation/message.Types"
+import { da } from "zod/v4/locales"
 
 config()
 
@@ -56,6 +57,7 @@ export function initWebsocket(wss : WebSocketServer) {
     users.push(user)
 
     ws.on("message", async (data : RawData) => {
+        console.log(data.toString())
         let parsedData
         try {
             parsedData = JSON.parse(data.toString())
