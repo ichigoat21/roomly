@@ -2,15 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import ChatPage, {ChatMessage, RoomMember} from "./chat";
+import ChatPage from "./chat";
+import { ChatMessage, RoomMember } from "./chat";
 import axios from "axios";
 
-// Matches exactly what the server broadcasts for a chat event
 interface WsChatEvent {
   type: "chat";
   id: string;
   senderId: string;
   senderName: string;
+  senderAvatarUrl: string | null;  // ← now included from server
   message: string;
   roomID: string;
   timestamp: string;
@@ -45,12 +46,9 @@ export default function RoomClient({ roomID }: RoomClientProps) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttempts = useRef(0);
-
-  // Refs stay fresh inside WS callbacks — no stale closure bugs
   const currentUserIdRef = useRef("");
   const currentUserNameRef = useRef("");
-
-  // Reassigned every render so onmessage always calls the latest version
+  const currentUserAvatarRef = useRef<string | null>(null);
   const handleWsEventRef = useRef<(data: WsEvent) => void>(() => {});
 
   // ── HTTP: fetch room ───────────────────────────────────────────────────────
@@ -67,23 +65,26 @@ export default function RoomClient({ roomID }: RoomClientProps) {
 
         const userId: string = res.data.currentUserId ?? "";
         const userName: string = res.data.currentUserName ?? "";
+        const userAvatar: string | null = res.data.currentUserAvatar ?? null;
 
         setCurrentUserId(userId);
         currentUserIdRef.current = userId;
         currentUserNameRef.current = userName;
+        currentUserAvatarRef.current = userAvatar;
 
         const adapted: ChatMessage[] = (res.data.messages ?? []).map(
           (m: {
             id: string | number;
-            userId: string;          // server stores as userId not senderId
-            user?: { username?: string };
-            message: string;         // server field is message not content
+            userId: string;
+            user?: { username?: string; avatar?: string | null };
+            message: string;
             createdAt?: string;
             timestamp?: string;
           }) => ({
             id: String(m.id),
             senderId: String(m.userId),
             senderName: m.user?.username ?? "Unknown",
+            senderAvatarUrl: m.user?.avatar ?? undefined,  // ← from HTTP history
             content: m.message,
             timestamp: formatTime(m.createdAt ?? m.timestamp ?? ""),
             isOwn: String(m.userId) === userId,
@@ -111,7 +112,6 @@ export default function RoomClient({ roomID }: RoomClientProps) {
   // ── Always-fresh WS event handler ─────────────────────────────────────────
   handleWsEventRef.current = (data: WsEvent) => {
     if (data.type === "chat") {
-      // Skip own messages — already appended optimistically on send
       if (data.senderId === currentUserIdRef.current) return;
 
       setMessages((prev) => [
@@ -120,6 +120,7 @@ export default function RoomClient({ roomID }: RoomClientProps) {
           id: data.id,
           senderId: data.senderId,
           senderName: data.senderName,
+          senderAvatarUrl: data.senderAvatarUrl ?? undefined,  // ← from WS broadcast
           content: data.message,
           timestamp: formatTime(data.timestamp),
           isOwn: false,
@@ -149,7 +150,6 @@ export default function RoomClient({ roomID }: RoomClientProps) {
 
     const connect = () => {
       const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL}?token=${token}`);
-      console.log(ws)
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -201,11 +201,12 @@ export default function RoomClient({ roomID }: RoomClientProps) {
       return;
     }
 
-    // Append own message immediately — don't wait for server echo
+    // Optimistic append with current user's own avatar
     const optimisticMsg: ChatMessage = {
       id: `optimistic-${Date.now()}`,
       senderId: currentUserIdRef.current,
       senderName: currentUserNameRef.current,
+      senderAvatarUrl: currentUserAvatarRef.current ?? undefined,
       content,
       timestamp: formatTime(new Date().toISOString()),
       isOwn: true,
@@ -216,7 +217,6 @@ export default function RoomClient({ roomID }: RoomClientProps) {
     try {
       ws.send(JSON.stringify({ type: "chat", roomID, message: content }));
     } catch {
-      // Roll back on failure
       setMessages((prev) => prev.filter((m) => m.id !== optimisticMsg.id));
       setError("Failed to send. Please try again.");
     } finally {
@@ -240,7 +240,6 @@ export default function RoomClient({ roomID }: RoomClientProps) {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="h-screen bg-[#0e0e0d] flex items-center justify-center">

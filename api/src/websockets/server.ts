@@ -7,24 +7,20 @@ import messageValidation from "../validation/message.Types"
 
 config()
 
-
 interface User {
     ws: WebSocket
     rooms: string[]
     userId: string
     userName: string
+    avatar: string | null
 }
 
 const users: User[] = []
 
-const decoded = (token: string): { userId: string; userName: string } | null => {
+const decodeToken = (token: string): string | null => {
     try {
         const payload = jwt.verify(token, process.env.SECRET!) as JwtPayload
-        console.log(process.env.SECRET)
-        return {
-            userId: payload.userId,
-            userName: payload.username ?? payload.name ?? "Unknown",
-        }
+        return payload.userId ?? null
     } catch (err) {
         console.log("[WS] Token decode failed:", err)
         return null
@@ -32,28 +28,47 @@ const decoded = (token: string): { userId: string; userName: string } | null => 
 }
 
 export function initWebsocket(wss: WebSocketServer) {
-    wss.on("connection", (ws, request) => {
+    wss.on("connection", async (ws, request) => {
         const url = request.url
         const queryParams = new URLSearchParams(url?.split("?")[1])
         const token = queryParams.get("token")
 
         console.log("[WS] New connection attempt")
 
-        const identity = token ? decoded(token) : null
+        const userId = token ? decodeToken(token) : null
 
-        if (!identity) {
-            console.log("[WS] No identity — closing")
+        if (!userId) {
+            console.log("[WS] Invalid token — closing")
             ws.close(1008, "Unauthorized")
             return
         }
 
-        console.log("[WS] Authenticated:", identity.userId)
+        // ── Fetch real user data from DB on connect ────────────────────────
+        // JWT only carries userId — username and avatar live in the DB
+        let dbUser: { username: string; avatar: string | null } | null = null
+        try {
+            dbUser = await client.users.findUnique({
+                where: { id: userId },
+                select: { username: true, avatar: true },
+            })
+        } catch (err) {
+            console.log("[WS] DB fetch failed on connect:", err)
+        }
+
+        if (!dbUser) {
+            console.log("[WS] User not found in DB — closing")
+            ws.close(1008, "User not found")
+            return
+        }
+
+        console.log("[WS] Authenticated:", userId, "as", dbUser.username)
 
         const user: User = {
             ws,
             rooms: [],
-            userId: identity.userId,
-            userName: identity.userName,
+            userId,
+            userName: dbUser.username,
+            avatar: dbUser.avatar,
         }
 
         users.push(user)
@@ -81,7 +96,7 @@ export function initWebsocket(wss: WebSocketServer) {
                 if (!user.rooms.includes(parsedData.roomID)) {
                     user.rooms.push(parsedData.roomID)
                 }
-                console.log("[WS] Joined room:", parsedData.roomID, "| User rooms:", user.rooms)
+                console.log("[WS] Joined room:", parsedData.roomID, "| rooms:", user.rooms)
             }
 
             if (parsedData.type === "leave") {
@@ -90,32 +105,33 @@ export function initWebsocket(wss: WebSocketServer) {
             }
 
             if (parsedData.type === "chat") {
-                console.log("[WS] Chat in room:", parsedData.roomID, "| msg:", parsedData.message)
+                console.log("[WS] Chat in room:", parsedData.roomID, "msg:", parsedData.message)
 
                 let savedId: string = `${Date.now()}`
 
                 try {
-                    // Check schema.prisma 
                     const saved = await client.chats.create({
                         data: {
                             message: parsedData.message,
-                            roomId: Number(parsedData.roomID),   
+                            roomId: Number(parsedData.roomID),
                             userId: user.userId,
                         }
                     })
                     savedId = String(saved.id)
                     console.log("[WS] Saved to DB:", savedId)
                 } catch (err) {
-                    console.log("[WS] DB error (will still broadcast):", err)
-                   
+                    console.log("[WS] DB save error:", err)
                 }
 
                 const timestamp = new Date().toISOString()
+
+                // ── Broadcast includes avatar so frontend can render it ─────
                 const payload = JSON.stringify({
                     type: "chat",
                     id: savedId,
                     senderId: user.userId,
                     senderName: user.userName,
+                    senderAvatarUrl: user.avatar ?? null,
                     message: parsedData.message,
                     roomID: parsedData.roomID,
                     timestamp,

@@ -12,7 +12,7 @@ const app = express()
 
 app.use(express.json())
 app.use(cors({
-    origin: "https://roomly-chat.vercel.app",
+    origin: ["https://roomly-chat.vercel.app", "http://localhost:3001"],
     credentials: true
   }));
 app.use('/auth', authRouter)
