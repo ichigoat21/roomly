@@ -11,7 +11,7 @@ interface WsChatEvent {
   id: string;
   senderId: string;
   senderName: string;
-  senderAvatarUrl: string | null;  // ← now included from server
+  senderAvatarUrl: string | null;
   message: string;
   roomID: string;
   timestamp: string;
@@ -51,7 +51,7 @@ export default function RoomClient({ roomID }: RoomClientProps) {
   const currentUserAvatarRef = useRef<string | null>(null);
   const handleWsEventRef = useRef<(data: WsEvent) => void>(() => {});
 
-  // ── HTTP: fetch room ───────────────────────────────────────────────────────
+  // ── HTTP: fetch room data ──────────────────────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) { router.replace("/auth"); return; }
@@ -63,37 +63,40 @@ export default function RoomClient({ roomID }: RoomClientProps) {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        const userId: string = res.data.currentUserId ?? "";
-        const userName: string = res.data.currentUserName ?? "";
-        const userAvatar: string | null = res.data.currentUserAvatar ?? null;
+        const data = res.data;
+
+        // These three now come from the fixed backend
+        const userId: string = data.currentUserId ?? "";
+        const userName: string = data.currentUserName ?? "";
+        const userAvatar: string | null = data.currentUserAvatar ?? null;
 
         setCurrentUserId(userId);
         currentUserIdRef.current = userId;
         currentUserNameRef.current = userName;
         currentUserAvatarRef.current = userAvatar;
 
-        const adapted: ChatMessage[] = (res.data.messages ?? []).map(
+        // Messages now include user relation from the fixed service
+        const adapted: ChatMessage[] = (data.messages ?? []).map(
           (m: {
             id: string | number;
             userId: string;
             user?: { username?: string; avatar?: string | null };
             message: string;
             createdAt?: string;
-            timestamp?: string;
           }) => ({
             id: String(m.id),
             senderId: String(m.userId),
             senderName: m.user?.username ?? "Unknown",
-            senderAvatarUrl: m.user?.avatar ?? undefined,  // ← from HTTP history
+            senderAvatarUrl: m.user?.avatar ?? undefined,
             content: m.message,
-            timestamp: formatTime(m.createdAt ?? m.timestamp ?? ""),
+            timestamp: formatTime(m.createdAt ?? ""),
             isOwn: String(m.userId) === userId,
           })
         );
 
         setMessages(adapted);
-        setMembers(res.data.members ?? []);
-        setRoomName(res.data.slug ?? roomID);
+        setMembers(data.members ?? []);
+        setRoomName(data.slug ?? roomID);
         setLoading(false);
       } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
@@ -112,6 +115,7 @@ export default function RoomClient({ roomID }: RoomClientProps) {
   // ── Always-fresh WS event handler ─────────────────────────────────────────
   handleWsEventRef.current = (data: WsEvent) => {
     if (data.type === "chat") {
+      // Skip own — already appended optimistically
       if (data.senderId === currentUserIdRef.current) return;
 
       setMessages((prev) => [
@@ -120,7 +124,7 @@ export default function RoomClient({ roomID }: RoomClientProps) {
           id: data.id,
           senderId: data.senderId,
           senderName: data.senderName,
-          senderAvatarUrl: data.senderAvatarUrl ?? undefined,  // ← from WS broadcast
+          senderAvatarUrl: data.senderAvatarUrl ?? undefined,
           content: data.message,
           timestamp: formatTime(data.timestamp),
           isOwn: false,
@@ -142,8 +146,10 @@ export default function RoomClient({ roomID }: RoomClientProps) {
     }
   };
 
-  // ── WebSocket connect + reconnect ─────────────────────────────────────────
+  // ── WebSocket: connect when room data is ready ─────────────────────────────
   useEffect(() => {
+    // loading=false means fetchRoom succeeded and userId is populated
+    // Don't connect until we have the room data
     if (loading || error) return;
 
     const token = localStorage.getItem("token");
@@ -201,7 +207,6 @@ export default function RoomClient({ roomID }: RoomClientProps) {
       return;
     }
 
-    // Optimistic append with current user's own avatar
     const optimisticMsg: ChatMessage = {
       id: `optimistic-${Date.now()}`,
       senderId: currentUserIdRef.current,
